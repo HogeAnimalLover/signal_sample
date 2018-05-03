@@ -41,7 +41,7 @@ void idft(double dst_real[], double dst_image[], double src_real[], double src_i
 //ステップ幅は再帰用パラメータ、外部から呼び出す際には1を指定すること
 void fft1(double dst_real[], double dst_image[], double src_real[], double src_image[], int length, int step)
 {
-	if (length / 2 / step) {
+	if (length <= step || length % (2 * step) ) {
 		//２分割できない場合は諦めて離散フーリエ変換（高速でないもの）
 		for (int i = 0; i < length / step; i++) {
 			dst_real[i] = dst_image[i] = 0.0f;
@@ -55,12 +55,12 @@ void fft1(double dst_real[], double dst_image[], double src_real[], double src_i
 	}
 	else {
 		//２分割できる場合は偶数番目と奇数番目をそれぞれ再帰処理する。
-		fft1(&dst_real[0], &dst_image[0], &src_real[0], &src_image[0], length, 2 * step);
+		fft1(&dst_real[                0], &dst_image[                0], &src_real[   0], &src_image[   0], length, 2 * step);
 		fft1(&dst_real[length / 2 / step], &dst_image[length / 2 / step], &src_real[step], &src_image[step], length, 2 * step);
 
 		//分割して処理したものをバタフライ演算で結合する。
 		for (int i = 0; i < length / 2 / step; i++) {
-			double temp_cos = cos(2 * M_PI * i / length / 2), temp_sin = sin(2 * M_PI * i / length / 2);
+			double temp_cos = cos(2 * M_PI * i  * step / length), temp_sin = sin(2 * M_PI * i * step / length);
 			double temp_real = dst_real[i + length / 2 / step] * temp_cos + dst_image[i + length / 2 / step] * temp_sin;
 			double temp_image = dst_image[i + length / 2 / step] * temp_cos - dst_real[i + length / 2 / step] * temp_sin;
 
@@ -72,12 +72,15 @@ void fft1(double dst_real[], double dst_image[], double src_real[], double src_i
 	}
 }
 
+
+
 //高速逆フーリエ変換（スケールしないもの）
 //引数：出力実部、出力虚部、入力実部、入力虚部、配列長、ステップ幅
 //ステップ幅は再帰用パラメータ、外部から呼び出す際には1を指定すること
 void ifft1(double dst_real[], double dst_image[], double src_real[], double src_image[], int length, int step)
 {
-	if (length / 2 / step) {
+	if (length <= step || length % (2 * step)) {
+		//２分割できない場合は諦めて離散フーリエ変換（高速でないもの）
 		for (int i = 0; i < length / step; i++) {
 			dst_real[i] = dst_image[i] = 0.0f;
 			for (int j = 0; j < length; j += step) {
@@ -89,11 +92,13 @@ void ifft1(double dst_real[], double dst_image[], double src_real[], double src_
 		}
 	}
 	else {
-		fft1(&dst_real[0], &dst_image[0], &src_real[0], &src_image[0], length, 2 * step);
-		fft1(&dst_real[length / 2 / step], &dst_image[length / 2 / step], &src_real[step], &src_image[step], length, 2 * step);
+		//２分割できる場合は偶数番目と奇数番目をそれぞれ再帰処理する。
+		ifft1(&dst_real[0], &dst_image[0], &src_real[0], &src_image[0], length, 2 * step);
+		ifft1(&dst_real[length / 2 / step], &dst_image[length / 2 / step], &src_real[step], &src_image[step], length, 2 * step);
 
+		//分割して処理したものをバタフライ演算で結合する。
 		for (int i = 0; i < length / 2 / step; i++) {
-			double temp_cos = cos(2 * M_PI * i / length / 2), temp_sin = sin(2 * M_PI * i / length / 2);
+			double temp_cos = cos(2 * M_PI * i  * step / length), temp_sin = sin(2 * M_PI * i * step / length);
 			double temp_real = dst_real[i + length / 2 / step] * temp_cos - dst_image[i + length / 2 / step] * temp_sin;
 			double temp_image = dst_image[i + length / 2 / step] * temp_cos + dst_real[i + length / 2 / step] * temp_sin;
 
@@ -104,3 +109,4 @@ void ifft1(double dst_real[], double dst_image[], double src_real[], double src_
 		}
 	}
 }
+

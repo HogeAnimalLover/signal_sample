@@ -7,21 +7,21 @@
 #include <stdio.h>
 #include "fft.h"
 
-
-#define N 1000
+#define N 16384
+//#define N 16383
 
 int main()
 {
-	double sample_r[N], sample_i[N];
-	double result_r[N], result_i[N];
-	double re_r[N], re_i[N];
+	static double sample_r[N], sample_i[N];
+	static double result_r[N], result_i[N];
+	static double re_r[N], re_i[N];
 
 	//テスト用入力
 	for (int i = 0; i < N; i++) {
-		sample_r[i] = cos(2 * M_PI * i / N) + 10 * cos(2 * M_PI * i / N * 15);
+		sample_r[i] = 10*cos(2 * M_PI * i / N);// +10 * cos(2 * M_PI * i / N * 15);
 		sample_i[i] = 0;
+		//sample_r[i] = 0;
 	}
-
 
 	fft1(result_r, result_i, sample_r, sample_i, N, 1);
 	ifft1(re_r, re_i, result_r, result_i, N, 1);
